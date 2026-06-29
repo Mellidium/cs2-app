@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGSI } from './hooks/useGSI'
 import { LivePanel } from './components/LivePanel'
+import { ConnectionStatus } from './components/ConnectionStatus'
 import type { SetupStatus } from '@shared/types'
 
 /**
@@ -9,7 +10,7 @@ import type { SetupStatus } from '@shared/types'
  * (MatchHistory, StatsOverview, ImprovementDash, DeathHeatmap, ...) from here.
  */
 export default function App(): JSX.Element {
-  const live = useGSI()
+  const { state: live, status, lastUpdate, count } = useGSI()
   const [setup, setSetup] = useState<SetupStatus | null>(null)
 
   useEffect(() => {
@@ -18,17 +19,31 @@ export default function App(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border px-6 py-4">
-        <h1 className="text-lg font-semibold tracking-tight">CS2 Companion</h1>
-        <p className="text-sm text-muted-foreground">
-          Live game-state integration &amp; post-match improvement analytics
-        </p>
+      <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight">CS2 Companion</h1>
+          <p className="text-sm text-muted-foreground">
+            Live game-state integration &amp; post-match improvement analytics
+          </p>
+        </div>
+        <ConnectionStatus status={status} lastUpdate={lastUpdate} count={count} />
       </header>
 
       <main className="mx-auto max-w-5xl space-y-6 p-6">
         {setup && (
-          <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-            <span className="font-medium text-card-foreground">Setup:</span> {setup.message}
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+            <span
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                setup.needsCs2Restart
+                  ? 'bg-yellow-500'
+                  : setup.cfgWritten || setup.cs2Found
+                    ? 'bg-green-500'
+                    : 'bg-zinc-500'
+              }`}
+            />
+            <span>
+              <span className="font-medium text-card-foreground">Setup:</span> {setup.message}
+            </span>
           </div>
         )}
 

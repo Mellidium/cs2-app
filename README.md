@@ -45,13 +45,15 @@ CS2 ──HTTP POST (GSI JSON)──▶ localhost:3000 ──▶ Electron main p
 
 ## Prerequisites
 
-- **Node.js 20+** and npm.
-- **Build toolchain for native modules** (`better-sqlite3` compiles a native binding):
-  - **Windows:** Visual Studio Build Tools with the "Desktop development with C++"
-    workload (or run `npm install --global windows-build-tools` on older setups), plus Python 3.
-  - **macOS:** Xcode Command Line Tools (`xcode-select --install`).
+- **Node.js 20+** and npm. Verified on Node 24.
 - **For live data / packaging:** Windows with CS2 installed via Steam.
 - **For demo enrichment:** the Steam client running and logged in.
+
+> **Native modules:** `better-sqlite3` ships prebuilt binaries for both Node and
+> Electron, so a normal `npm install` downloads them — **no C++ compiler needed.**
+> Only if a prebuilt binary is missing for your exact runtime does it fall back to
+> compiling from source, which would need a C++ toolchain (VS Build Tools with the
+> "Desktop development with C++" workload + Python 3 on Windows; Xcode CLT on macOS).
 
 ---
 
