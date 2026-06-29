@@ -16,7 +16,10 @@ export interface LiveGameState {
   roundPhase: RoundPhase | null
   ctScore: number
   tScore: number
+  bombStatus: 'planted' | 'defused' | 'exploded' | null
+  roundWinTeam: RoundSide | null
   player: {
+    name: string | null
     team: RoundSide | null
     health: number
     armor: number
@@ -24,11 +27,17 @@ export interface LiveGameState {
     money: number
     equipValue: number
     activeWeapon: string | null
+    activeWeaponType: string | null
+    activeWeaponAmmoClip: number | null
+    activeWeaponAmmoReserve: number | null
     roundKills: number
     roundHeadshots: number
+    roundTotalDmg: number
     matchKills: number
     matchAssists: number
     matchDeaths: number
+    matchMvps: number
+    matchScore: number
   } | null
 }
 

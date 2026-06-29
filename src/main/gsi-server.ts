@@ -86,17 +86,31 @@ export class GSIServer extends EventEmitter {
   }
 }
 
-function activeWeapon(player: GSIPayload['player']): string | null {
+function activeWeaponInfo(player: GSIPayload['player']): {
+  name: string | null
+  type: string | null
+  ammoClip: number | null
+  ammoReserve: number | null
+} {
   const weapons = player?.weapons
-  if (!weapons) return null
+  const empty = { name: null, type: null, ammoClip: null, ammoReserve: null }
+  if (!weapons) return empty
   for (const w of Object.values(weapons)) {
-    if (w.state === 'active') return w.name ?? null
+    if (w.state === 'active') {
+      return {
+        name: w.name ?? null,
+        type: w.type ?? null,
+        ammoClip: w.ammo_clip ?? null,
+        ammoReserve: w.ammo_reserve ?? null
+      }
+    }
   }
-  return null
+  return empty
 }
 
 export function toLiveState(payload: GSIPayload): LiveGameState {
   const p = payload.player
+  const weapon = activeWeaponInfo(p)
   return {
     steamId: payload.provider?.steamid ?? p?.steamid ?? '',
     map: payload.map?.name ?? null,
@@ -106,20 +120,29 @@ export function toLiveState(payload: GSIPayload): LiveGameState {
     roundPhase: payload.round?.phase ?? null,
     ctScore: payload.map?.team_ct?.score ?? 0,
     tScore: payload.map?.team_t?.score ?? 0,
+    bombStatus: payload.round?.bomb ?? null,
+    roundWinTeam: payload.round?.win_team ?? null,
     player: p
       ? {
+          name: p.name ?? null,
           team: p.team ?? null,
           health: p.state?.health ?? 0,
           armor: p.state?.armor ?? 0,
           helmet: p.state?.helmet ?? false,
           money: p.state?.money ?? 0,
           equipValue: p.state?.equip_value ?? 0,
-          activeWeapon: activeWeapon(p),
+          activeWeapon: weapon.name,
+          activeWeaponType: weapon.type,
+          activeWeaponAmmoClip: weapon.ammoClip,
+          activeWeaponAmmoReserve: weapon.ammoReserve,
           roundKills: p.state?.round_kills ?? 0,
           roundHeadshots: p.state?.round_killhs ?? 0,
+          roundTotalDmg: p.state?.round_totaldmg ?? 0,
           matchKills: p.match_stats?.kills ?? 0,
           matchAssists: p.match_stats?.assists ?? 0,
-          matchDeaths: p.match_stats?.deaths ?? 0
+          matchDeaths: p.match_stats?.deaths ?? 0,
+          matchMvps: p.match_stats?.mvps ?? 0,
+          matchScore: p.match_stats?.score ?? 0
         }
       : null
   }
