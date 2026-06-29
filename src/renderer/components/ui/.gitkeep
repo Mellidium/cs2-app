@@ -1,0 +1,2 @@
+# shadcn/ui components are copied into this folder via the shadcn CLI.
+# e.g. `npx shadcn@latest add button card tabs` — see README "Adding UI components".

@@ -1,0 +1,43 @@
+appId: com.mellidium.cs2companion
+productName: CS2 Companion
+copyright: Copyright © 2026 Mellidium
+
+directories:
+  buildResources: resources
+  output: release
+
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+
+# better-sqlite3 and the demo/Steam libs ship native bindings — keep them unpacked.
+asarUnpack:
+  - '**/*.{node,dll}'
+  - 'node_modules/better-sqlite3/**'
+
+win:
+  executableName: cs2-companion
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+# macOS target exists only so UI work can be packaged/tested during development.
+mac:
+  icon: resources/icon.png
+  category: public.app-category.utilities
+  target:
+    - dmg

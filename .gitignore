@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+out/
+dist/
+release/
+*.tsbuildinfo
+
+# Native module build artifacts
+build/
+prebuilds/
+
+# Runtime / local data
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.dem
+*.dem.gz
+gsi-token.json
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
