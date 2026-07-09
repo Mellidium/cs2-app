@@ -28,6 +28,9 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Local notes
+dgls-overview.md
+
 # Env
 .env
 .env.local

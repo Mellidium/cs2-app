@@ -28,7 +28,9 @@ export default defineConfig({
     build: {
       rollupOptions: {
         input: {
-          index: resolve(__dirname, 'src/main/index.ts')
+          index: resolve(__dirname, 'src/main/index.ts'),
+          // Worker-thread entry: demo parsing runs off the main thread.
+          'demo-worker': resolve(__dirname, 'src/main/demo/demo-worker.ts')
         }
       }
     },

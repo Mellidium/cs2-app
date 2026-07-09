@@ -1,10 +1,13 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
   AggregateStats,
+  DemoPlayerStats,
   DemoProgress,
+  DemoSummary,
   ElectronAPI,
   LiveGameState,
   MatchSummary,
+  ReplayFolderEntry,
   SetupStatus
 } from '@shared/types'
 
@@ -31,7 +34,18 @@ const api: ElectronAPI = {
     ipcRenderer.invoke('get-matches', steamId, limit) as Promise<MatchSummary[]>,
   getAggregateStats: (steamId) =>
     ipcRenderer.invoke('get-aggregate-stats', steamId) as Promise<AggregateStats>,
-  getSetupStatus: () => ipcRenderer.invoke('get-setup-status') as Promise<SetupStatus>
+  getSetupStatus: () => ipcRenderer.invoke('get-setup-status') as Promise<SetupStatus>,
+
+  // Demos
+  scanReplaysFolder: () =>
+    ipcRenderer.invoke('demo:scan-replays') as Promise<ReplayFolderEntry[]>,
+  importDemo: (demPath) =>
+    ipcRenderer.invoke('demo:import', demPath) as Promise<{ queued: boolean; demPath?: string }>,
+  getDemos: () => ipcRenderer.invoke('demo:list') as Promise<DemoSummary[]>,
+  getDemoStats: (demoId) =>
+    ipcRenderer.invoke('demo:get-stats', demoId) as Promise<DemoPlayerStats[]>,
+  getDemoReplay: (demoId) => ipcRenderer.invoke('demo:get-replay', demoId),
+  deleteDemo: (demoId) => ipcRenderer.invoke('demo:delete', demoId) as Promise<void>
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

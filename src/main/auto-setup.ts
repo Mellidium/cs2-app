@@ -118,10 +118,10 @@ export function buildGsiCfg(token: string): string {
 }
 
 const CS2_APP_ID = '730'
-const CS2_CFG_SUBPATH = ['steamapps', 'common', 'Counter-Strike Global Offensive', 'game', 'csgo', 'cfg']
+const CS2_GAME_SUBPATH = ['steamapps', 'common', 'Counter-Strike Global Offensive', 'game', 'csgo']
 
 /**
- * Locates `<CS2>/game/csgo/cfg` on Windows.
+ * Locates a directory under `<CS2>/game/csgo/` on Windows.
  *
  * CS2 can live in any Steam library, not just the default `C:` install — and a
  * leftover/partial CSGO folder in the default location will happily exist while
@@ -130,7 +130,7 @@ const CS2_CFG_SUBPATH = ['steamapps', 'common', 'Counter-Strike Global Offensive
  * registry, parse `libraryfolders.vdf`, and check the 730-owning libraries
  * first, falling back to the default install only if nothing else resolves.
  */
-function findCs2CfgDir(): string | null {
+function findCs2Dir(...sub: string[]): string | null {
   const steam = findSteamPath()
   const roots = steam ? cs2LibraryRoots(steam) : []
 
@@ -139,10 +139,19 @@ function findCs2CfgDir(): string | null {
   roots.push(join('C:', 'Program Files (x86)', 'Steam'))
 
   for (const root of roots) {
-    const cfgDir = join(root, ...CS2_CFG_SUBPATH)
-    if (existsSync(cfgDir)) return cfgDir
+    const dir = join(root, ...CS2_GAME_SUBPATH, ...sub)
+    if (existsSync(dir)) return dir
   }
   return null
+}
+
+function findCs2CfgDir(): string | null {
+  return findCs2Dir('cfg')
+}
+
+/** `<CS2>/game/csgo/replays` — where in-game "Download Match" saves .dem files. */
+export function findCs2ReplaysDir(): string | null {
+  return findCs2Dir('replays')
 }
 
 /** Active Steam install root, from the registry with default-location fallbacks. */

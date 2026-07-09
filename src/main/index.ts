@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { AppDatabase } from './database'
 import { GSIServer, GSI_PORT } from './gsi-server'
 import { registerIpcHandlers } from './ipc-handlers'
-import { runAutoSetup, loadOrCreateToken } from './auto-setup'
+import { runAutoSetup, loadOrCreateToken, findCs2ReplaysDir } from './auto-setup'
 import { createTray } from './tray'
 import { DemoManager } from './demo/demo-manager'
 import type { SetupStatus } from '@shared/types'
@@ -78,9 +78,14 @@ app.whenReady().then(async () => {
 
   db = new AppDatabase(dataDir)
   setupStatus = runAutoSetup(dataDir)
-  demoManager = new DemoManager(db)
+  demoManager = new DemoManager(
+    db,
+    join(dataDir, 'replays'),
+    join(__dirname, 'demo-worker.js'),
+    findCs2ReplaysDir
+  )
 
-  registerIpcHandlers(db, () => setupStatus)
+  registerIpcHandlers(db, demoManager, () => setupStatus)
 
   gsi = new GSIServer(token)
   await gsi.start(GSI_PORT).catch((err) => console.error('[gsi] failed to start:', err))

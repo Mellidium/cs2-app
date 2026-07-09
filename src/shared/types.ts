@@ -66,11 +66,100 @@ export interface AggregateStats {
   kastPct: number
 }
 
-export type DemoStage = 'downloading' | 'parsing' | 'analyzing'
+export type DemoStage =
+  | 'queued'
+  | 'parsing'
+  | 'analyzing'
+  | 'extracting'
+  | 'saving'
+  | 'done'
+  | 'failed'
 
 export interface DemoProgress {
-  matchId: number
+  /** Absolute path of the .dem being processed (stable key for the UI). */
+  demPath: string
   stage: DemoStage
+  message?: string
+  /** Set once the demo row exists (from 'saving' onward). */
+  demoId?: number
+}
+
+/** A parsed demo stored in the local database. */
+export interface DemoSummary {
+  id: number
+  demPath: string
+  fileName: string
+  map: string
+  rounds: number
+  /** Rounds won by the team that started CT / started T. */
+  ctStartScore: number
+  tStartScore: number
+  tickRate: number
+  parsedAt: string
+  hasReplay: boolean
+}
+
+/** An unparsed/parsed .dem found in the CS2 replays folder. */
+export interface ReplayFolderEntry {
+  demPath: string
+  fileName: string
+  sizeBytes: number
+  modifiedAt: string
+  /** Set when this file has already been parsed into the DB. */
+  demoId: number | null
+}
+
+/** Per-player stats computed from one parsed demo (one row per player). */
+export interface DemoPlayerStats {
+  demoId: number
+  steamId: string
+  name: string
+  startingSide: RoundSide | null
+  won: boolean
+  roundsPlayed: number
+  kills: number
+  deaths: number
+  assists: number
+  damage: number
+  adr: number
+  headshotKills: number
+  headshotPct: number
+  kastRounds: number
+  kastPct: number
+  tradeKills: number
+  untradedDeaths: number
+  openingKills: number
+  openingDeaths: number
+  multiKills2: number
+  multiKills3: number
+  multiKills4: number
+  multiKills5: number
+  clutch1v1Attempts: number
+  clutch1v1Wins: number
+  clutch1v2Attempts: number
+  clutch1v2Wins: number
+  flashesThrown: number
+  enemiesFlashed: number
+  enemyBlindDuration: number
+  teamflashDuration: number
+  flashAssists: number
+  utilityDamage: number
+  plants: number
+  defuses: number
+  /** CT/T splits for the core stats. */
+  sideSplits: {
+    CT: SideSplit
+    T: SideSplit
+  }
+}
+
+export interface SideSplit {
+  rounds: number
+  roundsWon: number
+  kills: number
+  deaths: number
+  assists: number
+  damage: number
 }
 
 /** The surface exposed on `window.electronAPI` by the preload bridge. */
@@ -79,13 +168,23 @@ export interface ElectronAPI {
   onGSIState: (cb: (state: LiveGameState) => void) => () => void
   onRoundEnd: (cb: (summary: unknown) => void) => () => void
   onMatchEnd: (cb: (summary: MatchSummary) => void) => () => void
-  onDemoReady: (cb: (matchId: number) => void) => () => void
+  onDemoReady: (cb: (demoId: number) => void) => () => void
   onDemoProgress: (cb: (progress: DemoProgress) => void) => () => void
 
   // Request/response (renderer → main)
   getMatches: (steamId: string, limit?: number) => Promise<MatchSummary[]>
   getAggregateStats: (steamId: string) => Promise<AggregateStats>
   getSetupStatus: () => Promise<SetupStatus>
+
+  // Demos
+  scanReplaysFolder: () => Promise<ReplayFolderEntry[]>
+  /** Parse a .dem; omit demPath to open a file picker. Resolves when queued. */
+  importDemo: (demPath?: string) => Promise<{ queued: boolean; demPath?: string }>
+  getDemos: () => Promise<DemoSummary[]>
+  getDemoStats: (demoId: number) => Promise<DemoPlayerStats[]>
+  /** Parsed replay payload (see shared/replay-types), or null if missing. */
+  getDemoReplay: (demoId: number) => Promise<unknown | null>
+  deleteDemo: (demoId: number) => Promise<void>
 }
 
 export interface SetupStatus {
