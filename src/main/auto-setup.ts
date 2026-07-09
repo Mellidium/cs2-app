@@ -154,6 +154,11 @@ export function findCs2ReplaysDir(): string | null {
   return findCs2Dir('replays')
 }
 
+/** `<CS2>/game/csgo/pak01_dir.vpk` — the archive holding radar textures + overviews. */
+export function findCs2PakFile(): string | null {
+  return findCs2Dir('pak01_dir.vpk')
+}
+
 /** Active Steam install root, from the registry with default-location fallbacks. */
 function findSteamPath(): string | null {
   try {

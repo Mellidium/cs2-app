@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReplayPayload } from '@shared/replay-types'
-import { autoFitProjector, boundsOf } from '../replay/project'
+import type { RadarCalibration } from '@shared/radar-types'
+import { autoFitProjector, boundsOf, radarLayout, radarProjector } from '../replay/project'
 import { roundTickRange, viewStateAt } from '../replay/playback'
 import { DEFAULT_THEME, drawScene } from '../replay/draw'
+
+/** A radar image loaded and ready to paint, with its world→image calibration. */
+interface LoadedRadar {
+  img: HTMLImageElement
+  cal: RadarCalibration
+}
 
 const SPEEDS = [0.5, 1, 2, 4]
 
@@ -29,6 +36,10 @@ export function ReplayViewer({ payload }: { payload: ReplayPayload }): JSX.Eleme
   playingRef.current = playing
   speedRef.current = speed
 
+  // Radar background, read imperatively by the RAF loop. Null = auto-fit view.
+  const radarRef = useRef<LoadedRadar | null>(null)
+  const [hasRadar, setHasRadar] = useState(false)
+
   const bounds = useMemo(() => boundsOf(payload), [payload])
   const range = useMemo(() => roundTickRange(payload.rounds[roundIdx]), [payload, roundIdx])
 
@@ -37,6 +48,32 @@ export function ReplayViewer({ payload }: { payload: ReplayPayload }): JSX.Eleme
     roundIdxRef.current = roundIdx
     tickRef.current = range.first
   }, [roundIdx, range])
+
+  // Fetch + decode the map's radar. Extraction can take a moment on first use;
+  // the RAF loop renders the auto-fit view until it's ready, then swaps in.
+  useEffect(() => {
+    let cancelled = false
+    radarRef.current = null
+    setHasRadar(false)
+    window.electronAPI
+      .getRadar(payload.map)
+      .then((radar) => {
+        if (cancelled || !radar) return
+        const img = new Image()
+        img.onload = () => {
+          if (cancelled) return
+          radarRef.current = { img, cal: radar.calibration }
+          setHasRadar(true)
+        }
+        img.src = radar.image
+      })
+      .catch(() => {
+        /* fall back to auto-fit */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [payload.map])
 
   // RAF loop: advance game time, resolve the view, paint.
   useEffect(() => {
@@ -99,7 +136,15 @@ export function ReplayViewer({ payload }: { payload: ReplayPayload }): JSX.Eleme
       }
 
       ctx.clearRect(0, 0, width, height)
-      const proj = autoFitProjector(bounds, width, height)
+      const radar = radarRef.current
+      let proj
+      if (radar) {
+        const layout = radarLayout(width, height)
+        ctx.drawImage(radar.img, layout.x, layout.y, layout.size, layout.size)
+        proj = radarProjector(radar.cal, layout)
+      } else {
+        proj = autoFitProjector(bounds, width, height)
+      }
       const view = viewStateAt(payload, ri, tick)
       drawScene(ctx, view, proj, DEFAULT_THEME)
       drawHud(ctx, view, payload, ri, width)
@@ -186,8 +231,8 @@ export function ReplayViewer({ payload }: { payload: ReplayPayload }): JSX.Eleme
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {payload.map} · round {round.round} of {payload.rounds.length} · auto-fit view (radar
-        images not yet wired)
+        {payload.map} · round {round.round} of {payload.rounds.length} ·{' '}
+        {hasRadar ? 'radar view' : 'auto-fit view'}
       </p>
     </div>
   )

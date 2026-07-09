@@ -4,9 +4,10 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { AppDatabase } from './database'
 import { GSIServer, GSI_PORT } from './gsi-server'
 import { registerIpcHandlers } from './ipc-handlers'
-import { runAutoSetup, loadOrCreateToken, findCs2ReplaysDir } from './auto-setup'
+import { runAutoSetup, loadOrCreateToken, findCs2ReplaysDir, findCs2PakFile } from './auto-setup'
 import { createTray } from './tray'
 import { DemoManager } from './demo/demo-manager'
+import { RadarManager } from './radar/radar-manager'
 import type { SetupStatus } from '@shared/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -14,6 +15,7 @@ let tray: Tray | null = null
 let db: AppDatabase
 let gsi: GSIServer
 let demoManager: DemoManager
+let radarManager: RadarManager
 let setupStatus: SetupStatus
 let isQuitting = false
 
@@ -85,7 +87,9 @@ app.whenReady().then(async () => {
     findCs2ReplaysDir
   )
 
-  registerIpcHandlers(db, demoManager, () => setupStatus)
+  radarManager = new RadarManager(dataDir, findCs2PakFile)
+
+  registerIpcHandlers(db, demoManager, radarManager, () => setupStatus)
 
   gsi = new GSIServer(token)
   await gsi.start(GSI_PORT).catch((err) => console.error('[gsi] failed to start:', err))

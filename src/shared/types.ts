@@ -1,6 +1,8 @@
 // Types shared between the Electron main process and the React renderer.
 // Keep this file free of Node- or DOM-specific imports so both sides can use it.
 
+import type { RadarAsset } from './radar-types'
+
 export type RoundSide = 'CT' | 'T'
 export type MatchResult = 'win' | 'loss' | 'draw' | 'in_progress'
 export type MapPhase = 'warmup' | 'live' | 'gameover' | 'intermission'
@@ -185,6 +187,13 @@ export interface ElectronAPI {
   /** Parsed replay payload (see shared/replay-types), or null if missing. */
   getDemoReplay: (demoId: number) => Promise<unknown | null>
   deleteDemo: (demoId: number) => Promise<void>
+  /**
+   * Radar image + calibration for a map (e.g. "de_dust2"), extracted on demand
+   * from the local CS2 install. `null` when unavailable (no install, workshop
+   * map, or offline during the one-time CLI download) — caller falls back to
+   * the auto-fit view.
+   */
+  getRadar: (map: string) => Promise<RadarAsset | null>
 }
 
 export interface SetupStatus {

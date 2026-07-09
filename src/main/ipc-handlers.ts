@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { gunzipSync } from 'node:zlib'
 import type { AppDatabase } from './database'
 import type { DemoManager } from './demo/demo-manager'
+import type { RadarManager } from './radar/radar-manager'
 import type { SetupStatus } from '@shared/types'
 
 /**
@@ -14,6 +15,7 @@ import type { SetupStatus } from '@shared/types'
 export function registerIpcHandlers(
   db: AppDatabase,
   demoManager: DemoManager,
+  radarManager: RadarManager,
   setupStatus: () => SetupStatus
 ): void {
   ipcMain.handle('get-matches', (_e, steamId: string, limit?: number) =>
@@ -59,6 +61,10 @@ export function registerIpcHandlers(
   })
 
   ipcMain.handle('demo:delete', (_e, demoId: number) => db.deleteDemo(demoId))
+
+  // --- Radar (2D map overview for the replay viewer) -------------------------
+
+  ipcMain.handle('radar:get', (_e, map: string) => radarManager.getRadar(map))
 
   // TODO (GSI-linked enrichment, see spec IPC Contract):
   //   get-weapon-breakdown, get-map-performance, get-improvement-stats,

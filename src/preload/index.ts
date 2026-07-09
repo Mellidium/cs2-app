@@ -10,6 +10,7 @@ import type {
   ReplayFolderEntry,
   SetupStatus
 } from '@shared/types'
+import type { RadarAsset } from '@shared/radar-types'
 
 /**
  * Wraps an ipcRenderer.on subscription and returns an unsubscribe function so
@@ -45,7 +46,10 @@ const api: ElectronAPI = {
   getDemoStats: (demoId) =>
     ipcRenderer.invoke('demo:get-stats', demoId) as Promise<DemoPlayerStats[]>,
   getDemoReplay: (demoId) => ipcRenderer.invoke('demo:get-replay', demoId),
-  deleteDemo: (demoId) => ipcRenderer.invoke('demo:delete', demoId) as Promise<void>
+  deleteDemo: (demoId) => ipcRenderer.invoke('demo:delete', demoId) as Promise<void>,
+
+  // Radar
+  getRadar: (map) => ipcRenderer.invoke('radar:get', map) as Promise<RadarAsset | null>
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)
